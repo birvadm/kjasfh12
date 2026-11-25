@@ -683,7 +683,8 @@ function Documents() {
 type PSection = "reports" | "printing" | "overprice"
 const P_SECTIONS: { key: PSection; label: string; hint: string; icon: typeof FileText }[] = [
   { key: "reports", label: "Report", hint: "Delivered against still to deliver", icon: FileText },
-  { key: "printing", label: "Printing and distribution", hint: "Print, email and recipients", icon: Send },
+  // Printing and distribution tab hidden for now; PrintingParams is kept so it can be restored.
+  // { key: "printing", label: "Printing and distribution", hint: "Print, email and recipients", icon: Send },
   { key: "overprice", label: "Overprice", hint: "Allowed configurations", icon: Coins },
 ]
 
@@ -915,7 +916,7 @@ function CropEstimationReport({ name }: { name: string }) {
           <Field label="Issue by"><Select clearable placeholder="Select…" value={f.issueBy} onChange={up("issueBy")} options={opts(["Transporter", "Field technician", "Farmer"])} /></Field>
           <Field label="Transporter"><Select clearable searchable placeholder="Select…" value={f.transporter} onChange={up("transporter")} options={opts([...new Set(LOADS.map((l) => l.transporter))])} /></Field>
           <Field label="Excluded field technician"><MultiSelect searchable values={excluded} onChange={setExcluded} options={BLOCKED_TECH_OPTS} placeholder="None selected" allLabel="All blocked" /></Field>
-          <Field label="Farmers"><Select clearable placeholder="Select…" value={f.farmers} onChange={up("farmers")} options={opts(["Non-final", "Final", "All"])} /></Field>
+          <Field label="Farmer status"><Select clearable placeholder="Select…" value={f.farmers} onChange={up("farmers")} options={opts(["Non-final", "Final", "All"])} /></Field>
           <Field label="Tobacco type"><Select clearable placeholder="Select…" value={f.tobacco} onChange={up("tobacco")} options={opts(["Virginia", "Burley"])} /></Field>
           <Field label="Issue with invoices"><Select clearable placeholder="Select…" value={f.withInvoices} onChange={up("withInvoices")} options={opts(["Yes", "No"])} /></Field>
         </div>
@@ -1977,7 +1978,6 @@ function OverpriceParams() {
   const [draft, setDraft] = useState<PFilters>(P_DEFAULT)
   // Filters apply as soon as they change; there is no separate Search step.
   const f = draft
-  const [sel, setSel] = useState(configs[0].id)
   const [add, setAdd] = useState<OverConfig | null>(null)
   const [confirmAdd, setConfirmAdd] = useState(false)
   const [editCfg, setEditCfg] = useState<OverConfig | null>(null)
@@ -1992,7 +1992,7 @@ function OverpriceParams() {
   const saveAdd = () => {
     if (!add || !valid) return
     const c = { ...add }
-    setConfigs((all) => [c, ...all]); setSel(c.id); setAdd(null); setConfirmAdd(false)
+    setConfigs((all) => [c, ...all]); setAdd(null); setConfirmAdd(false)
     toast({ tone: "success", title: "Configuration created", body: `${c.type} ${c.refClass} on ${c.node} is now allowed.` })
   }
 
@@ -2023,7 +2023,6 @@ function OverpriceParams() {
       }>
         <thead className="bg-canvas text-[12px] font-600 uppercase tracking-[0.04em] text-muted">
           <tr>
-            <th className={`${th} w-10`} />
             {["Crop", "Tobacco type", "Node", "Reference class", "Internal class", "SAP code", "From", "To"].map((h) => <th key={h} className={th}>{h}</th>)}
             <th className={`${th} text-right`}>Maximum price</th>
             <th className={`${th} text-right`}>Maximum per farmer</th>
@@ -2034,7 +2033,6 @@ function OverpriceParams() {
         <tbody>
           {add && (
             <tr className="border-t border-line bg-brand-soft/40 align-top">
-              <td className={td}><span className="grid h-4 w-4 place-items-center rounded-full border-2 border-brand"><span className="h-2 w-2 rounded-full bg-brand" /></span></td>
               <td className={`${td} min-w-[130px]`}><Select value={add.crop} onChange={upA("crop")} options={opts(["2026/2027", "2025/2026"])} /></td>
               <td className={`${td} min-w-[140px]`}><Select value={add.type} onChange={upA("type")} options={opts(["Virginia", "Burley", "Common"])} placeholder="Select type" /></td>
               <td className={`${td} min-w-[130px]`}><Select value={add.node} onChange={upA("node")} options={opts(["GT 04", "GT 07"])} placeholder="Select node" /></td>
@@ -2072,12 +2070,10 @@ function OverpriceParams() {
             </tr>
           )}
           {rows.map((c) => {
-            const on = sel === c.id
             const ec = editCfg?.id === c.id ? editCfg : null
             if (ec) {
               return (
                 <tr key={c.id} className="border-t border-line bg-brand-soft/40 align-top">
-                  <td className={td}><span className="grid h-4 w-4 place-items-center rounded-full border-2 border-brand"><span className="h-2 w-2 rounded-full bg-brand" /></span></td>
                   <td className={`${td} min-w-[130px]`}><Select value={ec.crop} onChange={(v) => setEditCfg({ ...ec, crop: v })} options={opts(["2026/2027", "2025/2026"])} /></td>
                   <td className={`${td} min-w-[140px]`}><Select value={ec.type} onChange={(v) => setEditCfg({ ...ec, type: v })} options={opts(["Virginia", "Burley", "Common"])} /></td>
                   <td className={`${td} min-w-[130px]`}><Select value={ec.node} onChange={(v) => setEditCfg({ ...ec, node: v })} options={opts(["GT 04", "GT 07"])} /></td>
@@ -2119,8 +2115,7 @@ function OverpriceParams() {
               )
             }
             return (
-              <tr key={c.id} onClick={() => setSel(c.id)} className={`cursor-pointer border-t border-line transition ${on ? "bg-brand-soft/50" : "hover:bg-canvas/60"}`}>
-                <td className={td}><span className={`grid h-4 w-4 place-items-center rounded-full border-2 ${on ? "border-brand" : "border-line"}`}>{on && <span className="h-2 w-2 rounded-full bg-brand" />}</span></td>
+              <tr key={c.id} className="border-t border-line transition hover:bg-canvas/60">
                 <td className={td}>{c.crop}</td>
                 <td className={`${td} font-600`}>{c.type}</td>
                 <td className={td}>{c.node}</td>
@@ -2146,7 +2141,7 @@ function OverpriceParams() {
               </tr>
             )
           })}
-          {rows.length === 0 && <tr className="border-t border-line"><td colSpan={13} className="px-3 py-10 text-center text-muted">No configurations match the filters.</td></tr>}
+          {rows.length === 0 && <tr className="border-t border-line"><td colSpan={12} className="px-3 py-10 text-center text-muted">No configurations match the filters.</td></tr>}
         </tbody>
       </TableCard>
 
