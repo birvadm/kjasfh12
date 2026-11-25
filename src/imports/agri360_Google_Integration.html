@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agri360 / Finance / Calculate Optimal Distance</title>
+<style>
+:root{
+  --primary:#0757B8;
+  --navy:#102A56;
+  --accent:#1E6FD9;
+  --lightblue:#EEF6FF;
+  --page:#F7FAFD;
+  --card:#FFFFFF;
+  --border:#D9E3EF;
+  --text:#172B4D;
+  --muted:#667085;
+  --success:#168A4A;
+  --warning:#F59E0B;
+  --purple:#7C3AED;
+  --route:#1473E6;
+  --r:10px;
+  --shadow:0 1px 2px rgba(16,42,86,.06), 0 1px 3px rgba(16,42,86,.05);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:#E9EEF5;
+  font-family:"Inter","Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+  color:var(--text);
+  font-size:13px;
+  line-height:1.45;
+  -webkit-font-smoothing:antialiased;
+  display:flex;justify-content:center;
+  padding:24px 12px;
+}
+.screen{
+  width:1440px;max-width:100%;
+  background:var(--page);
+  border:1px solid var(--border);
+  border-radius:12px;
+  overflow:hidden;
+}
+button{font-family:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+
+/* ---------- Header ---------- */
+.header{display:flex;align-items:stretch;background:#fff;border-bottom:1px solid var(--border)}
+.logo{background:var(--primary);color:#fff;display:flex;align-items:center;gap:10px;padding:0 26px;min-width:210px}
+.logo svg{flex:none}
+.logo b{font-size:22px;font-weight:700;letter-spacing:.2px}
+.title-block{padding:12px 22px;flex:1;display:flex;flex-direction:column;justify-content:center}
+.title-block h1{margin:0;font-size:21px;font-weight:650;color:var(--navy);letter-spacing:-.2px}
+.title-block p{margin:2px 0 0;color:var(--muted);font-size:12px}
+.header-right{display:flex;align-items:center;gap:18px;padding:0 24px}
+.help{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:12.5px;cursor:pointer;background:none;border:0}
+.help:hover{color:var(--primary)}
+.user{display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:600;color:var(--navy);cursor:pointer}
+.avatar{width:28px;height:28px;border-radius:50%;background:var(--primary);color:#fff;display:grid;place-items:center;font-size:11px;font-weight:700;letter-spacing:.3px}
+
+/* ---------- Layout ---------- */
+.body{padding:16px 20px 22px;display:flex;flex-direction:column;gap:14px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow)}
+.card-pad{padding:14px 16px}
+.card-title{font-size:14px;font-weight:650;color:var(--navy);margin:0}
+.eyebrow{font-size:11px;font-weight:600;color:var(--muted);text-transform:none}
+
+.field label{display:block;font-size:11.5px;color:var(--muted);margin-bottom:5px;font-weight:500}
+.control{
+  position:relative;display:flex;align-items:center;gap:8px;
+  height:36px;padding:0 10px;background:#fff;
+  border:1px solid var(--border);border-radius:7px;font-size:12.5px;color:var(--text);
+  cursor:pointer;transition:border-color .15s, box-shadow .15s;
+}
+.control:hover{border-color:#B9CBE0}
+.control:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px rgba(30,111,217,.12)}
+.control span.val{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.control select{
+  position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;
+}
+.chev{color:var(--muted);flex:none}
+.ico{color:var(--muted);flex:none}
+
+/* ---------- Two columns ---------- */
+.cols{display:grid;grid-template-columns:32fr 68fr;gap:14px;align-items:start}
+
+/* ---------- Route & stops ---------- */
+.sec-label{font-size:11.5px;font-weight:600;color:var(--navy);margin:14px 0 7px}
+.sec-head{display:flex;align-items:center;justify-content:space-between;margin:16px 0 8px}
+.loc{
+  display:flex;align-items:center;gap:11px;padding:9px 11px;border:1px solid var(--border);
+  border-radius:8px;background:#fff;cursor:pointer;position:relative
+}
+.loc:hover{border-color:#B9CBE0;background:#FCFDFF}
+.loc .pin{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;flex:none}
+.pin.home{background:var(--lightblue);color:var(--primary)}
+.pin.dest{background:#F4EEFF;color:var(--purple)}
+.loc .txt{flex:1;min-width:0}
+.loc .name{font-size:12.5px;font-weight:600;color:var(--primary)}
+.loc.dest-loc .name{color:var(--purple)}
+.loc .sub{font-size:11.5px;color:var(--muted)}
+.stops{display:flex;flex-direction:column;gap:8px}
+.stop{display:flex;align-items:center;gap:9px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:#fff;animation:pop .25s ease}
+@keyframes pop{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.stop.removing{opacity:0;transform:translateX(-8px);transition:.2s}
+.drag{color:#B4C2D4;cursor:grab;flex:none;letter-spacing:-2px;font-size:14px;line-height:1}
+.badge-num{width:24px;height:24px;border-radius:50%;background:var(--primary);color:#fff;display:grid;place-items:center;font-size:11px;font-weight:700;flex:none}
+.stop .txt{flex:1;min-width:0}
+.stop .name{font-size:12.5px;font-weight:600;color:var(--primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stop .sub{font-size:11.5px;color:var(--muted)}
+.x{border:0;background:none;color:#98A6B8;font-size:15px;line-height:1;cursor:pointer;padding:2px 4px;border-radius:5px}
+.x:hover{background:#FDECEC;color:#D14343}
+.btn{
+  display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 11px;border-radius:7px;
+  font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:#fff;color:var(--primary);
+  transition:.15s;
+}
+.btn:hover{background:var(--lightblue);border-color:#BBD4F2}
+.btn-primary{background:var(--primary);border-color:var(--primary);color:#fff;height:36px;padding:0 18px;font-size:12.5px}
+.btn-primary:hover{background:#064a9e;border-color:#064a9e}
+
+/* add-stop popover */
+.pop{
+  position:absolute;right:0;top:34px;z-index:20;width:240px;background:#fff;border:1px solid var(--border);
+  border-radius:9px;box-shadow:0 10px 24px rgba(16,42,86,.14);padding:10px;display:none
+}
+.pop.open{display:block}
+.pop input{width:100%;height:32px;border:1px solid var(--border);border-radius:6px;padding:0 9px;font-size:12.5px;font-family:inherit;color:var(--text)}
+.pop input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(30,111,217,.12)}
+.pop-list{margin:8px 0;max-height:150px;overflow:auto}
+.pop-item{padding:6px 8px;border-radius:6px;cursor:pointer;font-size:12.5px}
+.pop-item:hover,.pop-item.sel{background:var(--lightblue)}
+.pop-item small{display:block;color:var(--muted);font-size:11px}
+.rel{position:relative;display:inline-flex}
+
+/* ---------- Map ---------- */
+.map-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px}
+.map-wrap{position:relative;margin:0 14px;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:#EAF2E2}
+.map-wrap svg{display:block;width:100%;height:auto}
+.zoom{position:absolute;right:12px;bottom:14px;background:#fff;border:1px solid #d6d6d6;border-radius:3px;box-shadow:0 1px 4px rgba(0,0,0,.2);overflow:hidden}
+.zoom button{display:block;width:28px;height:28px;border:0;background:#fff;color:#5b5b5b;font-size:16px;cursor:pointer}
+.zoom button+button{border-top:1px solid #e4e4e4}
+.zoom button:hover{background:#f4f4f4}
+.seq{display:flex;align-items:flex-start;justify-content:space-between;gap:4px;padding:14px 20px 16px}
+.seq-node{display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center;flex:1;min-width:0}
+.seq-dot{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;color:#fff;background:var(--primary);font-size:12px;font-weight:700}
+.seq-dot.purple{background:var(--purple)}
+.seq-name{font-size:12px;font-weight:600;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.seq-sub{font-size:11px;color:var(--muted)}
+.seq-arrow{color:#9AAABF;padding-top:8px;flex:none}
+
+/* ---------- Summary ---------- */
+.summary{display:flex;align-items:center;gap:24px;padding:14px 18px}
+.summary .left{flex:1;min-width:0}
+.pill{font-size:11px;font-weight:600;color:var(--success);margin-left:6px}
+.route-line{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin-top:7px;font-size:12.5px;color:var(--navy);font-weight:500}
+.route-line svg{color:#9AAABF}
+.metrics{display:flex;align-items:center;gap:34px}
+.metric{text-align:left}
+.metric .lab{font-size:11px;color:var(--muted);margin-bottom:2px}
+.metric .v{font-size:22px;font-weight:700;color:var(--primary);letter-spacing:-.4px;line-height:1.15}
+.metric.strong .v{font-size:26px}
+.metric .v.dark{color:var(--navy)}
+
+/* ---------- Toll table ---------- */
+.tbl-head{display:flex;align-items:baseline;gap:8px;padding:13px 16px 10px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+.tbl-scroll{overflow-x:auto}
+th{
+  background:#F4F8FC;color:var(--muted);font-weight:600;text-align:left;
+  padding:9px 12px;border-top:1px solid var(--border);border-bottom:1px solid var(--border);white-space:nowrap
+}
+td{padding:10px 12px;border-bottom:1px solid #EDF2F8;color:var(--text);white-space:nowrap}
+th.num,td.num{text-align:right}
+tbody tr:hover td{background:#FBFDFF}
+tr.total td{background:#F4F8FC;font-weight:700;color:var(--primary);border-bottom:0}
+tr.total td:first-child{color:var(--navy)}
+.foot{padding:9px 16px 12px;font-size:11px;color:var(--muted)}
+.collapsed{display:none}
+#tollCard:not(.collapsed){animation:pop .25s ease}
+
+/* ---------- Manual override ---------- */
+.ov-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.ov-grid.three{grid-template-columns:200px 200px 260px 1fr;align-items:start}
+.inp{display:flex;align-items:center;height:36px;border:1px solid var(--border);border-radius:7px;background:#fff;padding:0 10px}
+.inp input{border:0;outline:none;font-family:inherit;font-size:12.5px;color:var(--text);width:100%;background:transparent}
+.inp.readonly{background:#F4F7FB;color:var(--muted)}
+.inp.readonly input{color:var(--muted)}
+.unit{font-size:11.5px;color:var(--muted);padding-left:6px}
+textarea{
+  width:100%;min-height:74px;resize:vertical;border:1px solid var(--border);border-radius:7px;
+  padding:9px 10px;font-family:inherit;font-size:12.5px;color:var(--text);line-height:1.5
+}
+textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(30,111,217,.12)}
+.counter{text-align:right;font-size:11px;color:var(--muted);margin-top:4px}
+
+/* ---------- Toast ---------- */
+.toast{
+  position:fixed;right:26px;bottom:26px;background:var(--navy);color:#fff;padding:12px 16px;border-radius:9px;
+  display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;box-shadow:0 12px 28px rgba(16,42,86,.28);
+  transform:translateY(14px);opacity:0;pointer-events:none;transition:.25s
+}
+.toast.show{transform:none;opacity:1}
+.toast .tick{width:20px;height:20px;border-radius:50%;background:var(--success);display:grid;place-items:center;flex:none}
+
+/* refresh shimmer */
+.refreshing{position:relative}
+.refreshing::after{
+  content:"";position:absolute;inset:0;border-radius:var(--r);
+  background:linear-gradient(90deg,rgba(255,255,255,0) 0%,rgba(238,246,255,.75) 50%,rgba(255,255,255,0) 100%);
+  animation:sweep .9s ease
+}
+@keyframes sweep{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+
+@media (max-width:1340px){
+  .cols{grid-template-columns:1fr}
+  .metrics{gap:24px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="screen">
+
+  <!-- ============ HEADER ============ -->
+  <header class="header">
+    <div class="logo">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/>
+        <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
+      </svg>
+      <b>Agri360</b>
+    </div>
+    <div class="title-block">
+      <h1>Calculate Optimal Distance</h1>
+      <p>Verify and review the optimal route, distance and tolls for the selected trip.</p>
+    </div>
+    <div class="header-right">
+      <button class="help">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+        Help
+      </button>
+      <div class="user">
+        <span class="avatar">FA</span>
+        Financial Analyst
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </div>
+    </div>
+  </header>
+
+  <div class="body">
+
+    <!-- ============ MAIN COLUMNS ============ -->
+    <div class="cols">
+
+      <!-- LEFT: Route & Stops -->
+      <section class="card card-pad" id="routeCard">
+        <h2 class="card-title">Route &amp; Stops</h2>
+
+        <div class="sec-label">Source (Start Point)</div>
+        <div class="loc">
+          <span class="pin home">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3 3 10.2V21h6v-6h6v6h6V10.2z"/></svg>
+          </span>
+          <span class="txt">
+            <span class="name">Transporter Base</span>
+            <span class="sub">Santa Cruz do Sul - RS</span>
+          </span>
+          <svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+        </div>
+
+        <div class="sec-head">
+          <span class="sec-label" style="margin:0">Intermediate Stops (Farmers)</span>
+          <span class="rel">
+            <button class="btn" id="addStopBtn">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
+              Add Stop
+            </button>
+            <div class="pop" id="addPop">
+              <input type="text" id="farmerSearch" placeholder="Search farmer" autocomplete="off">
+              <div class="pop-list" id="farmerList"></div>
+              <button class="btn btn-primary" style="width:100%;justify-content:center;height:32px" id="confirmAdd">Add</button>
+            </div>
+          </span>
+        </div>
+
+        <div class="stops" id="stops"></div>
+
+        <div class="sec-label" style="margin-top:16px">Destination (Buying Station / Billing Station)</div>
+        <div class="loc dest-loc">
+          <span class="pin dest">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5Z"/></svg>
+          </span>
+          <span class="txt">
+            <span class="name">Posto de Compra</span>
+            <span class="sub">Santa Cruz do Sul - RS</span>
+          </span>
+          <svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+        </div>
+      </section>
+
+      <!-- RIGHT: Optimal Route Preview -->
+      <section class="card" id="mapCard">
+        <div class="map-head">
+          <h2 class="card-title">Optimal Route Preview</h2>
+          <a class="btn" href="https://www.google.com/maps/dir/Santa+Cruz+do+Sul,+RS/Vera+Cruz,+RS/Candel%C3%A1ria,+RS/Ven%C3%A2ncio+Aires,+RS/Santa+Cruz+do+Sul,+RS" target="_blank" rel="noopener">
+            Open in Google Maps
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 3h6v6M10 14 21 3M18 13v8H3V6h8"/></svg>
+          </a>
+        </div>
+
+        <div class="map-wrap">
+          <svg viewBox="0 0 1000 340" role="img" aria-label="Regional road map showing the route from the transporter base in Santa Cruz do Sul through Vera Cruz, Candelária and Venâncio Aires back to the buying station.">
+            <defs>
+              <filter id="mshadow" x="-40%" y="-40%" width="180%" height="180%">
+                <feDropShadow dx="0" dy="1.5" stdDeviation="1.6" flood-color="#123" flood-opacity=".35"/>
+              </filter>
+            </defs>
+
+            <!-- terrain base -->
+            <rect width="1000" height="340" fill="#EAF1E1"/>
+            <!-- forest / relief patches -->
+            <g fill="#DCE8CB">
+              <path d="M0 0h1000v58c-120 22-210-6-330 12S430 40 300 62 90 44 0 66Z"/>
+              <path d="M0 246c140-30 250 14 380-6s240-38 360-14 190 8 260-6v120H0Z"/>
+              <ellipse cx="150" cy="150" rx="120" ry="46"/>
+              <ellipse cx="860" cy="132" rx="130" ry="40"/>
+            </g>
+            <g fill="#D2E2C0" opacity=".85">
+              <ellipse cx="470" cy="66" rx="150" ry="34"/>
+              <ellipse cx="660" cy="300" rx="180" ry="40"/>
+              <ellipse cx="60" cy="300" rx="120" ry="34"/>
+            </g>
+            <!-- river -->
+            <path d="M-10 118C90 128 160 96 250 108s150 60 240 52 190-58 300-42 180 46 220 40" fill="none" stroke="#AFCFE6" stroke-width="6" stroke-linecap="round" opacity=".9"/>
+            <path d="M300 340c30-70 4-110 60-150s120-30 150-70" fill="none" stroke="#AFCFE6" stroke-width="4" opacity=".7"/>
+
+            <!-- minor roads -->
+            <g stroke="#FFFFFF" stroke-width="4" fill="none" opacity=".95">
+              <path d="M120 340c40-90 100-120 170-140s110-70 110-140"/>
+              <path d="M620 40c10 70 40 110 40 170s-30 90-30 130"/>
+              <path d="M820 20c-20 60 10 100 60 130s90 30 120 70"/>
+              <path d="M40 40c60 30 90 70 160 84"/>
+              <path d="M480 340c20-60 60-90 130-96"/>
+            </g>
+            <g stroke="#E8DCC0" stroke-width="6" fill="none">
+              <path d="M-10 214c120 18 180-14 300 2s180 46 300 26 260-30 420-6" opacity=".9"/>
+            </g>
+
+            <!-- main highway casing (RSC-287 corridor) -->
+            <path id="hw" d="M300 214C360 232 420 268 480 272s90-6 130-2 90 4 140-16 130-52 190-64" fill="none" stroke="#F2CE6B" stroke-width="12" stroke-linecap="round" opacity=".55"/>
+
+            <!-- ROUTE -->
+            <path d="M345 218C370 244 400 266 452 272c46 5 78-4 128 0 42 3 76 8 118-8 52-20 104-52 152-64 28-7 46-9 62-10"
+                  fill="none" stroke="#0B4FA8" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" opacity=".35"/>
+            <path d="M345 218C370 244 400 266 452 272c46 5 78-4 128 0 42 3 76 8 118-8 52-20 104-52 152-64 28-7 46-9 62-10"
+                  fill="none" stroke="#1473E6" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+
+            <!-- highway shields -->
+            <g font-family="Inter, Arial" font-size="10" font-weight="700" fill="#3C4043">
+              <g><rect x="404" y="196" width="34" height="17" rx="4" fill="#fff" stroke="#BFC4C8"/><text x="421" y="208.5" text-anchor="middle">287</text></g>
+              <g><rect x="754" y="164" width="34" height="17" rx="4" fill="#fff" stroke="#BFC4C8"/><text x="771" y="176.5" text-anchor="middle">287</text></g>
+              <g><rect x="655" y="168" width="36" height="17" rx="4" fill="#fff" stroke="#BFC4C8"/><text x="673" y="180.5" text-anchor="middle">471</text></g>
+              <g><rect x="904" y="284" width="46" height="17" rx="4" fill="#fff" stroke="#BFC4C8"/><text x="927" y="296.5" text-anchor="middle">RS-410</text></g>
+            </g>
+
+            <!-- place labels -->
+            <g font-family="Inter, Arial" font-size="11" fill="#5F6B78">
+              <text x="470" y="140">Rio Pardo</text>
+              <text x="612" y="128">Sinimbu</text>
+              <text x="738" y="150">Vila Pacia</text>
+              <text x="892" y="128">Sinimbu</text>
+              <text x="852" y="248">Herveiras</text>
+              <text x="756" y="300">Vale Verde</text>
+              <text x="620" y="318">Passo do Sobrado</text>
+              <text x="150" y="318">Rincão del Rey</text>
+              <text x="196" y="176">Boa Vista</text>
+            </g>
+
+            <!-- Destination marker (purple) -->
+            <g filter="url(#mshadow)" transform="translate(345,190)">
+              <path d="M0 30C0 30 14 14 14 4A14 14 0 1 0-14 4C-14 14 0 30 0 30Z" fill="#7C3AED"/>
+              <circle cx="0" cy="3" r="5" fill="#fff"/>
+            </g>
+            <g font-family="Inter, Arial">
+              <text x="308" y="240" font-size="12" font-weight="700" fill="#102A56">Posto de Compra</text>
+              <text x="308" y="253" font-size="11" fill="#5F6B78">Santa Cruz do Sul</text>
+            </g>
+
+            <!-- Farmer markers -->
+            <g filter="url(#mshadow)">
+              <circle cx="478" cy="255" r="15" fill="#0757B8" stroke="#fff" stroke-width="2.5"/>
+              <circle cx="590" cy="272" r="15" fill="#0757B8" stroke="#fff" stroke-width="2.5"/>
+              <circle cx="740" cy="238" r="15" fill="#0757B8" stroke="#fff" stroke-width="2.5"/>
+            </g>
+            <g font-family="Inter, Arial" font-size="12" font-weight="700" fill="#fff" text-anchor="middle">
+              <text x="478" y="259">3</text>
+              <text x="590" y="276">2</text>
+              <text x="740" y="242">1</text>
+            </g>
+            <!-- label chips -->
+            <g font-family="Inter, Arial" font-size="11" font-weight="600" fill="#102A56" text-anchor="middle">
+              <g filter="url(#mshadow)"><rect x="430" y="272" width="96" height="21" rx="5" fill="#fff"/></g>
+              <text x="478" y="286">Venâncio Aires</text>
+              <g filter="url(#mshadow)"><rect x="552" y="290" width="78" height="21" rx="5" fill="#fff"/></g>
+              <text x="591" y="304">Candelária</text>
+              <g filter="url(#mshadow)"><rect x="706" y="256" width="70" height="21" rx="5" fill="#fff"/></g>
+              <text x="741" y="270">Vera Cruz</text>
+            </g>
+
+            <!-- Transporter base marker -->
+            <g filter="url(#mshadow)" transform="translate(918,168)">
+              <path d="M0 32C0 32 15 15 15 4A15 15 0 1 0-15 4C-15 15 0 32 0 32Z" fill="#0757B8"/>
+              <path d="M0-6 -7 0.6V8h4.4V3.4h5.2V8H7V0.6z" fill="#fff"/>
+            </g>
+            <g font-family="Inter, Arial" text-anchor="middle">
+              <text x="918" y="216" font-size="12" font-weight="700" fill="#102A56">Santa Cruz do Sul</text>
+            </g>
+          </svg>
+
+          <div class="zoom">
+            <button aria-label="Zoom in">+</button>
+            <button aria-label="Zoom out">−</button>
+          </div>
+        </div>
+
+        <div class="seq" id="seq"></div>
+      </section>
+    </div>
+
+    <!-- ============ SUMMARY ============ -->
+    <section class="card summary" id="summaryCard">
+      <div class="left">
+        <h2 class="card-title" style="margin-bottom:6px">Route &amp; Distance Summary</h2>
+        <div style="font-size:12.5px;font-weight:650;color:var(--navy)">Optimal Route <span class="pill">(Recommended)</span></div>
+        <div class="route-line" id="routeLine"></div>
+      </div>
+      <div class="metrics">
+        <div class="metric strong">
+          <div class="lab">Total Distance</div>
+          <div class="v" id="mDistance">78.23 km</div>
+        </div>
+        <div class="metric">
+          <div class="lab">Estimated Travel Time</div>
+          <div class="v dark" id="mTime">2h 03m</div>
+        </div>
+        <div class="metric">
+          <div class="lab">Total Tolls (Selected Vehicle)</div>
+          <div class="v dark" id="mToll">R$ 230.00</div>
+        </div>
+        <button class="btn" id="tollToggle" aria-expanded="false" aria-controls="tollCard">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+          <span id="tollToggleLabel">View Toll Details</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============ TOLL DETAILS ============ -->
+      <!-- Toll details -->
+      <section class="card collapsed" id="tollCard">
+        <div class="tbl-head">
+          <h2 class="card-title">Toll Details</h2>
+          <span class="eyebrow">(by Vehicle Type)</span>
+        </div>
+        <div class="tbl-scroll" id="tollTable">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:38px">#</th>
+                <th>Toll Plaza / Location</th>
+                <th>Highway / Road</th>
+                <th>Toll Type</th>
+                <th class="num">Car / Pickup</th>
+                <th class="num">Light Truck (LCV)</th>
+                <th class="num">Truck (2 Axles)</th>
+                <th class="num">Truck (3+ Axles)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>1</td><td>Vera Cruz Plaza</td><td>RS-287</td><td>State Concession</td><td class="num">R$ 12.50</td><td class="num">R$ 18.80</td><td class="num">R$ 26.40</td><td class="num">R$ 39.60</td></tr>
+              <tr><td>2</td><td>Candelária Plaza</td><td>RS-287</td><td>State Concession</td><td class="num">R$ 13.20</td><td class="num">R$ 19.80</td><td class="num">R$ 27.80</td><td class="num">R$ 41.70</td></tr>
+              <tr><td>3</td><td>Venâncio Aires Plaza</td><td>RSC-287</td><td>State Concession</td><td class="num">R$ 11.80</td><td class="num">R$ 17.70</td><td class="num">R$ 24.90</td><td class="num">R$ 37.40</td></tr>
+              <tr><td>4</td><td>Santa Cruz do Sul Plaza</td><td>RSC-287</td><td>State Concession</td><td class="num">R$ 9.50</td><td class="num">R$ 14.20</td><td class="num">R$ 20.00</td><td class="num">R$ 30.60</td></tr>
+              <tr class="total"><td></td><td colspan="3">Total (Selected Vehicle)</td><td class="num">R$ 47.00</td><td class="num">R$ 70.50</td><td class="num">R$ 99.10</td><td class="num">R$ 149.30</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="foot">* Values are subject to change as per concessionaire.</div>
+      </section>
+
+    <!-- ============ MANUAL OVERRIDE (last action on the screen) ============ -->
+      <!-- Manual override -->
+      <section class="card card-pad" id="overrideCard">
+        <div style="display:flex;align-items:baseline;gap:7px">
+          <h2 class="card-title">Manual Override</h2>
+          <span class="eyebrow">(Optional)</span>
+        </div>
+
+        <div class="ov-grid three" style="margin-top:14px">
+          <div class="field">
+            <label>System Calculated Distance</label>
+            <div class="inp readonly"><input value="78.23" readonly aria-label="System calculated distance"><span class="unit">km</span></div>
+          </div>
+          <div class="field">
+            <label for="ovDistance">Manually Entered Distance</label>
+            <div class="inp"><input id="ovDistance" value="74.10" inputmode="decimal"><span class="unit">km</span></div>
+          </div>
+          <div class="field">
+            <label for="ovReason">Reason (Optional)</label>
+            <div class="control">
+              <span class="val" id="v-reason">Road Closure / Diversion</span>
+              <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+              <select id="ovReason" data-target="v-reason" aria-label="Reason">
+                <option>Road Closure / Diversion</option>
+                <option>Route Restriction</option>
+                <option>Temporary Road Condition</option>
+                <option>Operational Requirement</option>
+                <option>Other</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label for="ovComments">Comments (Optional)</label>
+            <textarea id="ovComments" maxlength="200">Road diversion near Candelária due to road works on RS-287.</textarea>
+            <div class="counter"><span id="ovCount">0</span>/200</div>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:14px;margin-top:14px">
+          <button class="btn btn-primary" id="saveOverride">Save Override</button>
+          <span style="font-size:11.5px;color:var(--muted)">The saved value replaces the system distance for this trip.</span>
+        </div>
+      </section>
+
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite">
+  <span class="tick"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2"><path d="m5 13 4 4L19 7"/></svg></span>
+  Override saved successfully
+</div>
+
+<script>
+/* ---------- state ---------- */
+const farmers = [
+  {name:'Tiago Oliveira',   city:'Vera Cruz - RS'},
+  {name:'Mateus Ferreira',  city:'Candelária - RS'},
+  {name:'Lucas Schneider',  city:'Venâncio Aires - RS'}
+];
+const catalog = [
+  {name:'Rafael Bortolini', city:'Sinimbu - RS'},
+  {name:'Helena Kunz',      city:'Vale do Sol - RS'},
+  {name:'Bruno Wagner',     city:'Passo do Sobrado - RS'},
+  {name:'Camila Reis',      city:'Rio Pardo - RS'},
+  {name:'Otávio Lima',      city:'Herveiras - RS'}
+];
+
+const stopsEl = document.getElementById('stops');
+const seqEl   = document.getElementById('seq');
+const lineEl  = document.getElementById('routeLine');
+
+const arrow = '<svg class="seq-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+const homeIcon = '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3 3 10.2V21h6v-6h6v6h6V10.2z"/></svg>';
+const pinIcon  = '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5Z"/></svg>';
+
+function render(){
+  stopsEl.innerHTML = farmers.map((f,i)=>`
+    <div class="stop">
+      <span class="drag" aria-hidden="true">⋮⋮</span>
+      <span class="badge-num">${i+1}</span>
+      <span class="txt"><span class="name">${f.name}</span><span class="sub">${f.city}</span></span>
+      <button class="x" data-i="${i}" aria-label="Remove ${f.name}">✕</button>
+    </div>`).join('');
+
+  const nodes = [
+    {dot:homeIcon, name:'Transporter Base', sub:'Santa Cruz do Sul - RS', cls:''},
+    ...farmers.map((f,i)=>({dot:String(i+1), name:f.name, sub:f.city, cls:''})),
+    {dot:pinIcon, name:'Posto de Compra', sub:'Santa Cruz do Sul - RS', cls:'purple'}
+  ];
+  seqEl.innerHTML = nodes.map(n=>`
+    <div class="seq-node">
+      <span class="seq-dot ${n.cls}">${n.dot}</span>
+      <span class="seq-name">${n.name}</span>
+      <span class="seq-sub">${n.sub}</span>
+    </div>`).join(arrow);
+
+  lineEl.innerHTML = ['Transporter Base',...farmers.map(f=>f.name),'Posto de Compra']
+    .map(n=>`<span>${n}</span>`).join(arrow);
+
+  document.querySelectorAll('.x').forEach(b=>b.onclick=()=>{
+    const row = b.closest('.stop');
+    row.classList.add('removing');
+    setTimeout(()=>{ farmers.splice(+b.dataset.i,1); render(); recalc(); }, 180);
+  });
+}
+
+/* ---------- recalculated trip figures ---------- */
+function recalc(){
+  const km = (18.4 + farmers.length*19.9);
+  const mins = Math.round(km*1.57);
+  document.getElementById('mDistance').textContent = km.toFixed(2)+' km';
+  document.getElementById('mTime').textContent = Math.floor(mins/60)+'h '+String(mins%60).padStart(2,'0')+'m';
+  document.getElementById('mToll').textContent = 'R$ '+(farmers.length*57.5+57.5).toFixed(2);
+  ['mapCard','summaryCard'].forEach(id=>sweep(document.getElementById(id)));
+}
+function sweep(el){ el.classList.remove('refreshing'); void el.offsetWidth; el.classList.add('refreshing'); setTimeout(()=>el.classList.remove('refreshing'),900); }
+
+/* ---------- dropdown value binding ---------- */
+document.querySelectorAll('select[data-target]').forEach(sel=>{
+  sel.addEventListener('change',()=>{
+    document.getElementById(sel.dataset.target).textContent = sel.value;
+  });
+});
+
+/* ---------- add stop ---------- */
+const pop  = document.getElementById('addPop');
+const list = document.getElementById('farmerList');
+const search = document.getElementById('farmerSearch');
+let picked = null;
+
+function available(q=''){
+  const taken = farmers.map(f=>f.name);
+  return catalog.filter(c=>!taken.includes(c.name) && c.name.toLowerCase().includes(q.trim().toLowerCase()));
+}
+function drawList(){
+  const items = available(search.value);
+  if(!items.length){
+    list.innerHTML = '<div class="pop-item" style="color:var(--muted);cursor:default">No farmer matches that name.</div>';
+    picked = null; return;
+  }
+  if(!items.some(i=>i.name===picked)) picked = items[0].name;
+  list.innerHTML = items.map(c=>
+    `<div class="pop-item ${c.name===picked?'sel':''}" data-name="${c.name}">${c.name}<small>${c.city}</small></div>`
+  ).join('');
+}
+function addFarmer(name){
+  const f = catalog.find(c=>c.name===name);
+  if(!f || farmers.some(x=>x.name===name)) return;
+  farmers.push({name:f.name, city:f.city});
+  render(); recalc();
+  closePop();
+}
+function openPop(){ pop.classList.add('open'); search.value=''; picked=null; drawList(); search.focus(); }
+function closePop(){ pop.classList.remove('open'); }
+
+document.getElementById('addStopBtn').addEventListener('click', e=>{
+  e.stopPropagation();
+  pop.classList.contains('open') ? closePop() : openPop();
+});
+search.addEventListener('input', drawList);
+search.addEventListener('keydown', e=>{
+  if(e.key==='Enter'){ e.preventDefault(); if(picked) addFarmer(picked); }
+  if(e.key==='Escape'){ closePop(); }
+});
+list.addEventListener('click', e=>{
+  const item = e.target.closest('.pop-item[data-name]');
+  if(item) addFarmer(item.dataset.name);
+});
+document.getElementById('confirmAdd').addEventListener('click', ()=>{ if(picked) addFarmer(picked); });
+pop.addEventListener('click', e=>e.stopPropagation());
+document.addEventListener('click', closePop);
+
+/* ---------- toll table toggle ---------- */
+const toggle = document.getElementById('tollToggle');
+const tollCard = document.getElementById('tollCard');
+const toggleLabel = document.getElementById('tollToggleLabel');
+toggle.onclick=()=>{
+  const open = tollCard.classList.toggle('collapsed') === false;
+  toggle.setAttribute('aria-expanded', open);
+  toggleLabel.textContent = open ? 'Hide Toll Details' : 'View Toll Details';
+  if(open) tollCard.scrollIntoView({behavior:'smooth', block:'nearest'});
+};
+
+/* ---------- override ---------- */
+const comments = document.getElementById('ovComments');
+const count = document.getElementById('ovCount');
+const sync = ()=> count.textContent = comments.value.length;
+comments.addEventListener('input', sync); sync();
+
+const toast = document.getElementById('toast');
+document.getElementById('saveOverride').onclick=()=>{
+  toast.classList.add('show');
+  clearTimeout(window._t); window._t = setTimeout(()=>toast.classList.remove('show'), 2600);
+};
+
+render();
+</script>
+</body>
+</html>

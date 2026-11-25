@@ -1,0 +1,114 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+@import 'tailwindcss';
+
+:root {
+  /* Agri360 / BAT enterprise palette */
+  --navy: #12325b;
+  --navy-deep: #0d2545;
+  --blue: #1e5bb8;
+  --blue-strong: #1651a8;
+  --blue-tint: #eaf1fb;
+  --green: #5a9e3f;
+  --green-tint: #e7f3e1;
+  --amber-cell: #fff3cd;
+  --amber-border: #e6cf82;
+  --amber-strong: #b8860b;
+  --orange: #e08a3c;
+  --orange-tint: #fdecd8;
+
+  --page: #f4f6f9;
+  --surface: #ffffff;
+  --surface-2: #f8fafc;
+  --ink: #1c2733;
+  --ink-soft: #52606d;
+  --ink-mute: #8a97a5;
+  --border: #e3e8ef;
+  --border-strong: #cfd7e2;
+  --ring: #1e5bb8;
+
+  /* segment badges */
+  --gold-bg: #fdf3d3;
+  --gold-fg: #9a7b12;
+  --silver-bg: #eef1f4;
+  --silver-fg: #5c6773;
+  --bronze-bg: #fbe3d0;
+  --bronze-fg: #b5651d;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--page);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'tnum';
+}
+
+.font-mono {
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Hide scrollbars until scrolling */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+*:hover::-webkit-scrollbar-thumb,
+*:focus-within::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+}
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 8px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type='number'] {
+  -moz-appearance: textfield;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade {
+  animation: fadeIn 0.25s ease both;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+.animate-slide {
+  animation: slideIn 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}

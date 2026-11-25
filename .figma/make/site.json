@@ -1,0 +1,10 @@
+{
+  "description": "Streamlines payment order processing within finance modules by offering a user-friendly, enterprise-grade interface with consistent design and efficient workflows.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
