@@ -913,7 +913,6 @@ function CropEstimationReport({ name }: { name: string }) {
       <Card className="p-5">
         <div className="grid grid-cols-1 items-end gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <Field label="Crop"><Select clearable placeholder="Select…" value={f.crop} onChange={up("crop")} options={opts(["2026/2027", "2025/2026"])} /></Field>
-          <Field label="Issue by"><Select clearable placeholder="Select…" value={f.issueBy} onChange={up("issueBy")} options={opts(["Transporter", "Field technician", "Farmer"])} /></Field>
           <Field label="Transporter"><Select clearable searchable placeholder="Select…" value={f.transporter} onChange={up("transporter")} options={opts([...new Set(LOADS.map((l) => l.transporter))])} /></Field>
           <Field label="Excluded field technician"><MultiSelect searchable values={excluded} onChange={setExcluded} options={BLOCKED_TECH_OPTS} placeholder="None selected" allLabel="All blocked" /></Field>
           <Field label="Farmer status"><Select clearable placeholder="Select…" value={f.farmers} onChange={up("farmers")} options={opts(["Non-final", "Final", "All"])} /></Field>
@@ -2632,7 +2631,6 @@ function InvoiceItems({ load: l, doc: d }: { load: Load; doc: FarmerDoc }) {
           <tr>
             {["Line", "Purchase class", "External material", "Internal class", "Internal material", "Plant", "Storage"].map((h) => <th key={h} className={th}>{h}</th>)}
             {["Bales", "Kilos", "Price per kg", "Net value"].map((h) => <th key={h} className={`${th} text-right`}>{h}</th>)}
-            <th className={th}>Tax code</th>
           </tr>
         </thead>
         <tbody>
@@ -2649,7 +2647,6 @@ function InvoiceItems({ load: l, doc: d }: { load: Load; doc: FarmerDoc }) {
               <td className={`${td} text-right tabular-nums`}>{num(i.kg)}</td>
               <td className={`${td} text-right tabular-nums`}>{i.price.toFixed(2)}</td>
               <td className={`${td} text-right font-700 tabular-nums`}>{money(i.net)}</td>
-              <td className={td}>{i.tax}</td>
             </tr>
           ))}
           <tr className="border-t border-line bg-canvas font-700 text-ink">
@@ -2658,7 +2655,6 @@ function InvoiceItems({ load: l, doc: d }: { load: Load; doc: FarmerDoc }) {
             <td className={`${td} text-right tabular-nums`}>{num(kg)}</td>
             <td className={`${td} text-right tabular-nums`}>{(net / kg).toFixed(2)} avg</td>
             <td className={`${td} text-right tabular-nums`}>{money(net)}</td>
-            <td className={td} />
           </tr>
         </tbody>
       </TableCard>
